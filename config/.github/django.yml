@@ -44,3 +44,4 @@ jobs:
       - name: Ejecutar pruebas Django
         run: |
           python manage.py test
+          
