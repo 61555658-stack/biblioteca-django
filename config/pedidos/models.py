@@ -1,0 +1,80 @@
+from django.db import models
+from django.contrib.auth.models import User
+
+
+# Categoría
+class Categoria(models.Model):
+    nombre = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.nombre
+
+
+# Libro
+class Libro(models.Model):
+    titulo = models.CharField(max_length=100)
+    autor = models.CharField(max_length=100)
+    stock = models.IntegerField()
+    activo = models.BooleanField(default=True)
+
+    categoria = models.ForeignKey(
+        Categoria,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return self.titulo
+
+
+# Préstamo
+class Prestamo(models.Model):
+
+    ESTADOS = [
+        ('Prestado', 'Prestado'),
+        ('Devuelto', 'Devuelto'),
+        ('Retrasado', 'Retrasado'),
+    ]
+
+    usuario = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    libros = models.ManyToManyField(
+        Libro,
+        through='DetallePrestamo'
+    )
+
+    fecha_prestamo = models.DateField(auto_now_add=True)
+
+    fecha_devolucion = models.DateField()
+
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS,
+        default='Prestado'
+    )
+
+    def __str__(self):
+        return f"Prestamo {self.id} - {self.usuario.username}"
+
+
+# Detalle del Préstamo
+class DetallePrestamo(models.Model):
+
+    prestamo = models.ForeignKey(
+        Prestamo,
+        on_delete=models.CASCADE
+    )
+
+    libro = models.ForeignKey(
+        Libro,
+        on_delete=models.CASCADE
+    )
+
+    cantidad = models.IntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.libro.titulo} x{self.cantidad}"

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2 class="mb-4">Solicitud de Préstamo</h2>
+
+<div class="card p-3">
+
+    {% if request.session.carrito.items %}
+
+    <table class="table align-middle">
+
+        <thead>
+            <tr>
+                <th>Libro</th>
+                <th>Autor</th>
+                <th class="text-center">Cantidad</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for key, value in request.session.carrito.items %}
+
+            <tr>
+
+                <td>
+                    <strong>{{ value.nombre }}</strong>
+                </td>
+
+                <td>
+                    {{ value.autor }}
+                </td>
+
+                <td class="text-center">
+                    {{ value.cantidad }}
+                </td>
+
+                <td class="text-center">
+
+                    <a href="{% url 'agregar' key %}"
+                       class="btn btn-sm btn-outline-success">
+                        +
+                    </a>
+
+                    <a href="{% url 'restar' key %}"
+                       class="btn btn-sm btn-outline-warning">
+                        -
+                    </a>
+
+                    <a href="{% url 'eliminar' key %}"
+                       class="btn btn-sm btn-danger">
+                        Eliminar
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    <div class="d-flex justify-content-between mt-3">
+
+        <a href="{% url 'limpiar' %}"
+           class="btn btn-outline-secondary">
+            Limpiar Solicitud
+        </a>
+
+        <a href="{% url 'confirmar_prestamo' %}"
+           class="btn btn-success">
+            Confirmar Solicitud de Préstamo
+        </a>
+
+    </div>
+
+    {% else %}
+
+    <div class="text-center py-4">
+
+        <p class="text-muted">
+            No has seleccionado ningún libro para solicitar en préstamo.
+        </p>
+
+        <a href="{% url 'lista_libros' %}"
+           class="btn btn-primary">
+
+            Ver Catálogo de Libros
+
+        </a>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

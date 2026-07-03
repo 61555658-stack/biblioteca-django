@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2>Mis Pedidos</h2>
+
+<div class="list-group mt-3">
+    {% for pedido in pedidos %}
+    <a href="/pedido/{{ pedido.id }}/" class="list-group-item list-group-item-action py-3">
+        <strong>Pedido #{{ pedido.id }}</strong>
+        <span class="text-muted ms-3">— {{ pedido.fecha|date:"d/m/Y H:i" }}</span>
+    </a>
+
+    {% empty %}
+    <div class="list-group-item text-muted">
+        No tienes pedidos registrados.
+    </div>
+
+    {% endfor %}
+</div>
+
+{% endblock %}

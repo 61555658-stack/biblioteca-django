@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2>Libros Disponibles</h2>
+
+<form method="GET" class="mb-3">
+
+    <input type="text"
+           name="buscar"
+           value="{{ buscar }}"
+           placeholder="Buscar libro">
+
+    <button type="submit"
+            class="btn btn-primary btn-sm">
+        Buscar
+    </button>
+
+    <a href="{% url 'lista_libros' %}"
+       class="btn btn-secondary btn-sm">
+        Limpiar
+    </a>
+
+</form>
+
+<ul class="list-group">
+
+    {% for libro in libros %}
+
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+
+        <div>
+
+            <strong>{{ libro.titulo }}</strong><br>
+
+            Autor: {{ libro.autor }}<br>
+
+            Categoría:
+            {{ libro.categoria }}<br>
+
+            Stock:
+            {{ libro.stock }}
+
+        </div>
+
+        <div>
+
+            <a href="{% url 'agregar' libro.id %}"
+               class="btn btn-success btn-sm">
+
+                Solicitar
+
+            </a>
+
+        </div>
+
+    </li>
+
+    {% empty %}
+
+    <li class="list-group-item">
+
+        No se encontraron libros.
+
+    </li>
+
+    {% endfor %}
+
+</ul>
+
+{% endblock %}
