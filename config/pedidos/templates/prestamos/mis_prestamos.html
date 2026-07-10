@@ -1,21 +1,36 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<h2>Mis Pedidos</h2>
+<h2>Mis Préstamos</h2>
 
 <div class="list-group mt-3">
-    {% for pedido in pedidos %}
-    <a href="/pedido/{{ pedido.id }}/" class="list-group-item list-group-item-action py-3">
-        <strong>Pedido #{{ pedido.id }}</strong>
-        <span class="text-muted ms-3">— {{ pedido.fecha|date:"d/m/Y H:i" }}</span>
+
+    {% for prestamo in prestamos %}
+
+    <a href="#" class="list-group-item list-group-item-action py-3">
+
+        <strong>Préstamo #{{ prestamo.id }}</strong>
+
+        <span class="text-muted ms-3">
+            — {{ prestamo.fecha|date:"d/m/Y" }}
+        </span>
+
+        <br>
+
+        <span class="badge bg-success">
+            {{ prestamo.estado }}
+        </span>
+
     </a>
 
     {% empty %}
+
     <div class="list-group-item text-muted">
-        No tienes pedidos registrados.
+        No tienes préstamos registrados.
     </div>
 
     {% endfor %}
+
 </div>
 
 {% endblock %}

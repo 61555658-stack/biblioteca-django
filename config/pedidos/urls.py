@@ -75,5 +75,5 @@ urlpatterns = [
         "reporte-prestamos/",
         views.reporte_prestamos,
         name="reporte_prestamos"
-    ),
+    ),  
 ]

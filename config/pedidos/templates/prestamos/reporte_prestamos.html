@@ -3,21 +3,17 @@
 {% block content %}
 <div class="container mt-4" style="max-width: 1000px;">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Reporte de Ventas</h2>
+        <h2>Reporte de Préstamos</h2>
         <span class="badge bg-secondary p-2">Panel de Control</span>
     </div>
-    
+
     <div class="row g-3 mb-4">
-        <div class="col-md-6">
+        <div class="col-md-12">
             <div class="card shadow-sm border-0 bg-light p-3 text-center">
-                <h5 class="text-muted mb-1" style="font-size: 0.95rem; font-weight: 600;">Cantidad Total de Pedidos</h5>
+                <h5 class="text-muted mb-1" style="font-size: 0.95rem; font-weight: 600;">
+                    Cantidad Total de Préstamos
+                </h5>
                 <p class="display-6 fw-bold text-dark mb-0">{{ cantidad_total }}</p>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 bg-light p-3 text-center">
-                <h5 class="text-muted mb-1" style="font-size: 0.95rem; font-weight: 600;">Total General Vendido</h5>
-                <p class="display-6 fw-bold text-success mb-0">S/ {{ total_general }}</p>
             </div>
         </div>
     </div>
@@ -27,26 +23,38 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th scope="col" class="ps-3">Número de Pedido</th>
-                        <th scope="col">Usuario</th>
-                        <th scope="col">Fecha</th>
-                        <th scope="col" class="pe-3 text-end">Total del Pedido</th>
+                        <th class="ps-3">N° de Préstamo</th>
+                        <th>Usuario</th>
+                        <th>Fecha del Préstamo</th>
+                        <th class="pe-3 text-end">Estado</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for pedido in pedidos %}
+                    {% for prestamo in prestamos %}
                     <tr>
-                        <td class="ps-3 fw-bold text-secondary">#{{ pedido.id }}</td>
-                        <td>
-                            <span class="fw-semibold text-dark">{{ pedido.user.username }}</span>
+                        <td class="ps-3 fw-bold text-secondary">
+                            #{{ prestamo.id }}
                         </td>
-                        <td class="text-muted">{{ pedido.fecha|date:"d/m/Y H:i" }}</td>
-                        <td class="pe-3 text-end fw-bold text-dark">S/ {{ pedido.total }}</td>
+                        <td>
+                            <span class="fw-semibold text-dark">
+                                {{ prestamo.user.username }}
+                            </span>
+                        </td>
+                        <td class="text-muted">
+                            {{ prestamo.fecha|date:"d/m/Y H:i" }}
+                        </td>
+                        <td class="pe-3 text-end">
+                            {% if prestamo.devuelto %}
+                                <span class="badge bg-success">Devuelto</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Prestado</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
                         <td colspan="4" class="text-center py-4 text-muted">
-                            <i class="bi bi-info-circle me-1"></i> No se han registrado pedidos en el sistema todavía.
+                            No se han registrado préstamos en el sistema.
                         </td>
                     </tr>
                     {% endfor %}
