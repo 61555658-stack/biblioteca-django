@@ -9,13 +9,17 @@
 
     <a href="#" class="list-group-item list-group-item-action py-3">
 
-        <strong>Préstamo #{{ prestamo.id }}</strong>
-
-        <span class="text-muted ms-3">
-            — {{ prestamo.fecha|date:"d/m/Y" }}
+        <!-- Aquí se añade el Estudiante solicitante -->
+        <strong>Préstamo #{{ prestamo.id }}</strong> 
+        <span class="ms-2 text-dark">
+            — Solicitado por: <strong>{{ prestamo.estudiante.get_full_name|default:prestamo.estudiante.username }}</strong>
         </span>
 
-        <br>
+        <span class="text-muted ms-3">
+            — {{ prestamo.fecha_prestamo|date:"d/m/Y" }}
+        </span>
+
+        <br><br>
 
         <span class="badge bg-success">
             {{ prestamo.estado }}

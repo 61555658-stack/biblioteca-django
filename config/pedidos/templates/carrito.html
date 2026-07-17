@@ -5,94 +5,78 @@
 
 <div class="card p-3">
 
-    {% if request.session.carrito.items %}
+{% if request.session.carrito.items %}
 
-    <table class="table align-middle">
+<table class="table table-bordered">
 
-        <thead>
-            <tr>
-                <th>Libro</th>
-                <th>Autor</th>
-                <th class="text-center">Cantidad</th>
-                <th class="text-center">Acciones</th>
-            </tr>
-        </thead>
+    <thead class="table-dark">
+        <tr>
+            <th>Libro</th>
+            <th>Autor</th>
+            <th>Cantidad</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
 
-        <tbody>
+    <tbody>
+    {% for key,value in request.session.carrito.items %}
+    <tr>
+        <td>{{ value.titulo }}</td>
+        <td>{{ value.autor }}</td>
+        <td>{{ value.cantidad }}</td>
+        <td>
+            <a href="{% url 'agregar' key %}" class="btn btn-success btn-sm">+</a>
+            <a href="{% url 'restar' key %}" class="btn btn-warning btn-sm">-</a>
+            <a href="{% url 'eliminar' key %}" class="btn btn-danger btn-sm">
+                Eliminar
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
 
-            {% for key, value in request.session.carrito.items %}
+</table>
 
-            <tr>
+<form method="POST" action="{% url 'confirmar_prestamo' %}">
+{% csrf_token %}
 
-                <td>
-                    <strong>{{ value.titulo }}</strong>
-                </td>
+<div class="mb-3">
+    <label class="form-label fw-bold">
+        Nombre del Estudiante
+    </label>
+    
+    <!-- CORREGIDO: Cambiado de input de texto a un select interactivo -->
+    <select name="usuario" class="form-select" required>
+        <option value="" disabled selected>-- Seleccione un estudiante --</option>
+        {% for estudiante in usuarios %}
+            <option value="{{ estudiante.id }}">
+                {{ estudiante.get_full_name|default:estudiante.username }}
+            </option>
+        {% endfor %}
+    </select>
+</div>
 
-                <td>
-                    {{ value.autor }}
-                </td>
+<div class="d-flex justify-content-between">
+    <a href="{% url 'limpiar' %}" class="btn btn-secondary">
+        Limpiar Solicitud
+    </a>
+    <button type="submit" class="btn btn-success">
+        Confirmar Solicitud
+    </button>
+</div>
 
-                <td class="text-center">
-                    {{ value.cantidad }}
-                </td>
+</form>
 
-                <td class="text-center">
+{% else %}
 
-                    <a href="{% url 'agregar' key %}"
-                       class="btn btn-sm btn-outline-success">
-                        +
-                    </a>
+<div class="text-center py-4">
+    <h5 class="text-muted">No existen libros seleccionados.</h5>
+    <a href="{% url 'lista_libros' %}" class="btn btn-primary mt-2">
+        Ver Catálogo
+    </a>
+</div>
 
-                    <a href="{% url 'restar' key %}"
-                       class="btn btn-sm btn-outline-warning">
-                        -
-                    </a>
-
-                    <a href="{% url 'eliminar' key %}"
-                       class="btn btn-sm btn-danger">
-                        Eliminar
-                    </a>
-
-                </td>
-
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
-
-    <div class="d-flex justify-content-between mt-3">
-
-        <a href="{% url 'limpiar' %}"
-           class="btn btn-outline-secondary">
-            Limpiar Solicitud
-        </a>
-
-        <a href="{% url 'confirmar_prestamo' %}"
-           class="btn btn-success">
-            Confirmar Solicitud de Préstamo
-        </a>
-
-    </div>
-
-    {% else %}
-
-    <div class="text-center py-4">
-
-        <p class="text-muted">
-            No has seleccionado ningún libro para solicitar en préstamo.
-        </p>
-
-        <a href="{% url 'lista_libros' %}"
-           class="btn btn-primary">
-            Ver Catálogo de Libros
-        </a>
-
-    </div>
-
-    {% endif %}
+{% endif %}
 
 </div>
 

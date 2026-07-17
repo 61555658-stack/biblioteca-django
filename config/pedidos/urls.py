@@ -4,19 +4,69 @@ from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
 
+
 urlpatterns = [
 
-    # Página principal
-    path("", views.inicio, name="inicio"),
 
-    # Libros
-    path("libros/", views.lista_libros, name="lista_libros"),
+    # ======================================
+    # PÁGINA PRINCIPAL
+    # ======================================
 
-    # Historial de préstamos
-    path("mis-prestamos/", views.mis_prestamos, name="mis_prestamos"),
+    path(
+        "",
+        views.inicio,
+        name="inicio"
+    ),
 
-    # Carrito (Selección de libros)
-    path("carrito/", views.ver_carrito, name="ver_carrito"),
+
+
+    # ======================================
+    # LIBROS
+    # ======================================
+
+    path(
+        "libros/",
+        views.lista_libros,
+        name="lista_libros"
+    ),
+
+
+
+    # ======================================
+    # PRÉSTAMOS DEL USUARIO
+    # ======================================
+
+    path(
+        "mis-prestamos/",
+        views.mis_prestamos,
+        name="mis_prestamos"
+    ),
+
+
+
+    # ======================================
+    # DETALLE DEL PRÉSTAMO
+    # ======================================
+
+    path(
+        "detalle-prestamo/<int:prestamo_id>/",
+        views.detalle_prestamo,
+        name="detalle_prestamo"
+    ),
+
+
+
+    # ======================================
+    # CARRITO / SOLICITUD DE PRÉSTAMO
+    # ======================================
+
+    path(
+        "carrito/",
+        views.ver_carrito,
+        name="ver_carrito"
+    ),
+
+
 
     path(
         "agregar/<int:libro_id>/",
@@ -24,11 +74,15 @@ urlpatterns = [
         name="agregar"
     ),
 
+
+
     path(
         "eliminar/<int:libro_id>/",
         views.eliminar_libro,
         name="eliminar"
     ),
+
+
 
     path(
         "restar/<int:libro_id>/",
@@ -36,11 +90,15 @@ urlpatterns = [
         name="restar"
     ),
 
+
+
     path(
         "limpiar/",
         views.limpiar_carrito,
         name="limpiar"
     ),
+
+
 
     path(
         "confirmar/",
@@ -48,14 +106,36 @@ urlpatterns = [
         name="confirmar_prestamo"
     ),
 
-    # Devolución de libros
+
+
+    # ======================================
+    # DEVOLUCIÓN
+    # ======================================
+
     path(
         "devolver/<int:prestamo_id>/",
         views.devolver_libro,
         name="devolver_libro"
     ),
 
-    # Login
+
+
+    # ======================================
+    # REPORTE GENERAL
+    # ======================================
+
+    path(
+        "reporte-prestamos/",
+        views.reporte_prestamos,
+        name="reporte_prestamos"
+    ),
+
+
+
+    # ======================================
+    # AUTENTICACIÓN
+    # ======================================
+
     path(
         "login/",
         auth_views.LoginView.as_view(
@@ -64,16 +144,12 @@ urlpatterns = [
         name="login"
     ),
 
+
+
     path(
         "logout/",
         auth_views.LogoutView.as_view(),
         name="logout"
     ),
 
-    # Reportes
-    path(
-        "reporte-prestamos/",
-        views.reporte_prestamos,
-        name="reporte_prestamos"
-    ),  
 ]

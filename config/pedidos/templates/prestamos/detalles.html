@@ -1,19 +1,52 @@
 {% extends 'base.html' %}
+
 {% block content %}
 
-<h2>Detalle del Pedido</h2>
+<h2 class="mb-4">Detalle del Préstamo</h2>
 
-<ul class="list-group mt-3 mb-4">
-    {% for d in detalles %}
-    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
-        <span>{{ d.producto.nombre }}</span>
-        <span class="badge bg-secondary rounded-pill">x{{ d.cantidad }}</span>
-    </li>
-    {% endfor %}
-</ul>
 
-<a href="/mis-pedidos/" class="btn btn-sm btn-outline-secondary">
-    Volver a mis pedidos
+<div class="card shadow">
+
+    <div class="card-header bg-primary text-white">
+        Libros prestados
+    </div>
+
+
+    <ul class="list-group list-group-flush">
+
+        {% for d in detalles %}
+
+        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+
+            <span>
+                {{ d.libro.titulo }}
+            </span>
+
+            <span class="badge bg-secondary rounded-pill">
+                x{{ d.cantidad }}
+            </span>
+
+        </li>
+
+        {% empty %}
+
+        <li class="list-group-item">
+            No hay libros registrados.
+        </li>
+
+        {% endfor %}
+
+    </ul>
+
+</div>
+
+
+<a href="{% url 'reporte_prestamos' %}" 
+   class="btn btn-sm btn-outline-secondary mt-3">
+
+    Volver a préstamos
+
 </a>
+
 
 {% endblock %}

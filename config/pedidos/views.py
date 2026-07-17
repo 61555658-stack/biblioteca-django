@@ -1,9 +1,10 @@
-# prestamos/views.py
+# pedidos/views.py
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count
+from django.contrib.auth.models import User
+from django.db import transaction  # Importación añadida para transacciones seguras
 from datetime import date, timedelta
 
 from .carrito import Carrito
@@ -15,8 +16,7 @@ from .models import Libro, Prestamo, DetallePrestamo
 # ======================================
 
 def lista_libros(request):
-
-    buscar = request.GET.get('buscar', '')
+    buscar = request.GET.get("buscar", "")
 
     if buscar:
         libros = Libro.objects.filter(
@@ -36,15 +36,12 @@ def lista_libros(request):
 
 
 # ======================================
-# CONTROL DEL CARRITO
+# CARRITO DE PRÉSTAMO
 # ======================================
 
 def agregar_libro(request, libro_id):
-
     carrito = Carrito(request)
-
-    libro = Libro.objects.get(id=libro_id)
-
+    libro = get_object_or_404(Libro, id=libro_id)
     carrito.agregar(libro)
 
     return redirect(
@@ -56,112 +53,125 @@ def agregar_libro(request, libro_id):
 
 
 def eliminar_libro(request, libro_id):
-
     carrito = Carrito(request)
-
-    libro = Libro.objects.get(id=libro_id)
-
+    libro = get_object_or_404(Libro, id=libro_id)
     carrito.eliminar(libro)
 
     return redirect("ver_carrito")
 
 
 def restar_libro(request, libro_id):
-
     carrito = Carrito(request)
-
-    libro = Libro.objects.get(id=libro_id)
-
+    libro = get_object_or_404(Libro, id=libro_id)
     carrito.restar(libro)
 
     return redirect("ver_carrito")
 
 
 def limpiar_carrito(request):
-
     carrito = Carrito(request)
-
     carrito.limpiar()
 
     return redirect("ver_carrito")
 
 
-def ver_carrito(request):
+# ======================================
+# VER SOLICITUD DE PRÉSTAMO
+# ======================================
 
-    carrito = request.session.get(
-        "carrito",
-        {}
-    )
+@login_required
+def ver_carrito(request):
+    carrito = request.session.get("carrito", {})
+
+    estudiantes = User.objects.filter(
+        is_staff=False,
+        is_superuser=False
+    ).order_by("username")
 
     return render(
         request,
         "carrito.html",
         {
-            "carrito": carrito
+            "carrito": carrito,
+            "usuarios": estudiantes
         }
     )
 
 
 # ======================================
-# REGISTRAR PRÉSTAMO
+# CONFIRMAR PRÉSTAMO (Optimizado con transacciones)
 # ======================================
 
 @login_required
 def confirmar_prestamo(request):
+    if request.method != "POST":
+        return redirect("ver_carrito")
 
-    carrito_sesion = request.session.get("carrito")
+    carrito_sesion = request.session.get("carrito", {})
 
     if not carrito_sesion:
-        return redirect("lista_libros")
+        messages.error(request, "No existen libros en la solicitud.")
+        return redirect("ver_carrito")
 
-    prestamo = Prestamo.objects.create(
-        usuario=request.user,
-        fecha_devolucion=date.today() + timedelta(days=7),
-        estado="Prestado"
-    )
+    usuario_id = request.POST.get("usuario")
 
-    for key, value in carrito_sesion.items():
+    if not usuario_id:
+        messages.error(request, "Debe seleccionar un estudiante.")
+        return redirect("ver_carrito")
 
-        libro = Libro.objects.get(id=key)
+    usuario = get_object_or_404(User, id=usuario_id)
 
-        cantidad = value["cantidad"]
-
-        if libro.stock < cantidad:
-
-            messages.error(
-                request,
-                f"No hay stock disponible para {libro.titulo}"
+    # Bloque protegido: Se guarda TODO o NO SE GUARDA NADA si hay un error
+    try:
+        with transaction.atomic():
+            prestamo = Prestamo.objects.create(
+                estudiante=usuario,  # <-- CORREGIDO: Guarda al estudiante seleccionado
+                fecha_devolucion=date.today() + timedelta(days=7),
+                estado="Prestado"
             )
 
-            prestamo.delete()
+            for key, value in carrito_sesion.items():
+                libro = get_object_or_404(Libro, id=key)
+                cantidad = value["cantidad"]
 
-            return redirect("ver_carrito")
+                if libro.stock < cantidad:
+                    # Cancelará automáticamente toda la transacción del bloque
+                    raise ValueError(f"No existe stock para {libro.titulo}")
 
-        DetallePrestamo.objects.create(
-            prestamo=prestamo,
-            libro=libro,
-            cantidad=cantidad
-        )
+                DetallePrestamo.objects.create(
+                    prestamo=prestamo,
+                    libro=libro,
+                    cantidad=cantidad
+                )
 
-        libro.stock -= cantidad
+                libro.stock -= cantidad
+                libro.save()
 
-        libro.save()
+    except ValueError as e:
+        messages.error(request, str(e))
+        return redirect("ver_carrito")
 
+    # Si todo el bloque fue exitoso, se limpia el carrito
     request.session["carrito"] = {}
 
-    return redirect("mis_prestamos")
+    messages.success(request, "Préstamo registrado correctamente.")
+    return redirect("reporte_prestamos")
 
 
 # ======================================
-# HISTORIAL DE PRÉSTAMOS
+# MIS PRÉSTAMOS
 # ======================================
 
 @login_required
 def mis_prestamos(request):
-
-    prestamos = Prestamo.objects.filter(
-        usuario=request.user
-    ).order_by("-id")
+    # Si el usuario actual es administrador/staff, no debe ver préstamos como suyos
+    if request.user.is_staff or request.user.is_superuser:
+        prestamos = Prestamo.objects.none()
+    else:
+        # Si es un estudiante, ve únicamente sus registros asignados
+        prestamos = Prestamo.objects.filter(
+            estudiante=request.user
+        ).order_by("-id")
 
     return render(
         request,
@@ -173,21 +183,48 @@ def mis_prestamos(request):
 
 
 # ======================================
-# DEVOLVER LIBRO
+# DETALLE DEL PRÉSTAMO
+# ======================================
+
+@login_required
+def detalle_prestamo(request, prestamo_id):
+    prestamo = get_object_or_404(Prestamo, id=prestamo_id)
+    detalles = DetallePrestamo.objects.filter(prestamo=prestamo)
+
+    return render(
+        request,
+        "prestamos/detalle_prestamo.html",
+        {
+            "prestamo": prestamo,
+            "detalles": detalles
+        }
+    )
+
+
+# ======================================
+# DEVOLVER LIBROS
 # ======================================
 
 @login_required
 def devolver_libro(request, prestamo_id):
+    prestamo = get_object_or_404(Prestamo, id=prestamo_id)
 
-    prestamo = Prestamo.objects.get(
-        id=prestamo_id
-    )
+    if prestamo.estado == "Devuelto":
+        messages.warning(request, "Este préstamo ya fue devuelto.")
+        return redirect("reporte_prestamos")
+
+    detalles = DetallePrestamo.objects.filter(prestamo=prestamo)
+
+    for detalle in detalles:
+        libro = detalle.libro
+        libro.stock += detalle.cantidad
+        libro.save()
 
     prestamo.estado = "Devuelto"
-
     prestamo.save()
 
-    return redirect("mis_prestamos")
+    messages.success(request, "Libro devuelto correctamente.")
+    return redirect("reporte_prestamos")
 
 
 # ======================================
@@ -196,22 +233,12 @@ def devolver_libro(request, prestamo_id):
 
 @login_required
 def reporte_prestamos(request):
-
     prestamos = Prestamo.objects.all().order_by("-id")
 
     cantidad_total = prestamos.count()
-
-    prestados = prestamos.filter(
-        estado="Prestado"
-    ).count()
-
-    devueltos = prestamos.filter(
-        estado="Devuelto"
-    ).count()
-
-    retrasados = prestamos.filter(
-        estado="Retrasado"
-    ).count()
+    prestados = prestamos.filter(estado="Prestado").count()
+    devueltos = prestamos.filter(estado="Devuelto").count()
+    retrasados = prestamos.filter(estado="Retrasado").count()
 
     return render(
         request,
@@ -227,14 +254,12 @@ def reporte_prestamos(request):
 
 
 # ======================================
-# PÁGINA DE INICIO
+# INICIO
 # ======================================
 
 @login_required
 def inicio(request):
-
     total_libros = Libro.objects.count()
-
     total_prestamos = Prestamo.objects.count()
 
     return render(

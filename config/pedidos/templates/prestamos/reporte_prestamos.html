@@ -1,66 +1,125 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4" style="max-width: 1000px;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Reporte de Préstamos</h2>
-        <span class="badge bg-secondary p-2">Panel de Control</span>
-    </div>
+
+<div class="container mt-4">
+
+    <h2 class="mb-4 text-center">
+        Reporte de Préstamos
+    </h2>
 
     <div class="row g-3 mb-4">
         <div class="col-md-12">
             <div class="card shadow-sm border-0 bg-light p-3 text-center">
-                <h5 class="text-muted mb-1" style="font-size: 0.95rem; font-weight: 600;">
+                <h5 class="text-muted mb-1" style="font-size: 0.95rem; font-weight:600;">
                     Cantidad Total de Préstamos
                 </h5>
-                <p class="display-6 fw-bold text-dark mb-0">{{ cantidad_total }}</p>
+
+                <p class="display-6 fw-bold text-dark mb-0">
+                    {{ cantidad_total }}
+                </p>
             </div>
         </div>
     </div>
 
     <div class="card shadow-sm border-0">
+
         <div class="table-responsive">
+
             <table class="table table-hover align-middle mb-0">
+
                 <thead class="table-dark">
                     <tr>
-                        <th class="ps-3">N° de Préstamo</th>
+                        <th>N° de Préstamo</th>
                         <th>Usuario</th>
                         <th>Fecha del Préstamo</th>
-                        <th class="pe-3 text-end">Estado</th>
+                        <th>Fecha de Devolución</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-center">Acciones</th> <!-- Nueva columna -->
                     </tr>
                 </thead>
+
                 <tbody>
+
                     {% for prestamo in prestamos %}
+
                     <tr>
-                        <td class="ps-3 fw-bold text-secondary">
-                            #{{ prestamo.id }}
-                        </td>
+
                         <td>
-                            <span class="fw-semibold text-dark">
-                                {{ prestamo.user.username }}
-                            </span>
+                            <strong>#{{ prestamo.id }}</strong>
                         </td>
-                        <td class="text-muted">
-                            {{ prestamo.fecha|date:"d/m/Y H:i" }}
+
+                        <td>
+                            <!-- CORREGIDO: Ahora apunta correctamente al campo estudiante -->
+                            {{ prestamo.estudiante.get_full_name|default:prestamo.estudiante.username }}
                         </td>
-                        <td class="pe-3 text-end">
-                            {% if prestamo.devuelto %}
-                                <span class="badge bg-success">Devuelto</span>
+
+                        <td>
+                            {{ prestamo.fecha_prestamo|date:"d/m/Y" }}
+                        </td>
+
+                        <td>
+                            {{ prestamo.fecha_devolucion|date:"d/m/Y" }}
+                        </td>
+
+                        <td class="text-center">
+
+                            {% if prestamo.estado == "Prestado" %}
+
+                                <span class="badge bg-warning text-dark">
+                                    Prestado
+                                </span>
+
+                            {% elif prestamo.estado == "Devuelto" %}
+
+                                <span class="badge bg-success">
+                                    Devuelto
+                                </span>
+
+                            {% elif prestamo.estado == "Retrasado" %}
+
+                                <span class="badge bg-danger">
+                                    Retrasado
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td class="text-center">
+                            {% if prestamo.estado != "Devuelto" %}
+                                <a href="{% url 'devolver_libro' prestamo.id %}" 
+                                   class="btn btn-sm btn-success fw-bold"
+                                   onclick="return confirm('¿Estás seguro de que deseas finalizar este préstamo y registrar la devolución?');">
+                                    Finalizar Préstamo
+                                </a>
                             {% else %}
-                                <span class="badge bg-warning text-dark">Prestado</span>
+                                <span class="text-muted small">Completado</span>
                             {% endif %}
                         </td>
+
                     </tr>
+
                     {% empty %}
+
                     <tr>
-                        <td colspan="4" class="text-center py-4 text-muted">
-                            No se han registrado préstamos en el sistema.
+
+                        <td colspan="6" class="text-center text-muted py-4">
+                            No existen préstamos registrados.
                         </td>
+
                     </tr>
+
                     {% endfor %}
+
                 </tbody>
+
             </table>
+
         </div>
+
     </div>
+
 </div>
+
 {% endblock %}
